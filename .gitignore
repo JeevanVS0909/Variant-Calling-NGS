@@ -1,40 +1,18 @@
-# ---- NGS raw & processed data ----
-*.fastq
-*.fastq.gz
-*.fq
+# Raw and intermediate data
 *.bam
-*.sam
 *.bai
-*.vcf
-*.vcf.gz
-*.bcf
-
-# ---- Variant annotation outputs ----
-*.csv
-*.tsv
-
-# ---- Reference genome & indexes ----
-*.fa
-*.fasta
+*.sam
 *.fna
-*.amb
-*.ann
-*.bwt
-*.pac
-*.sa
-*.fai
+*.fasta
+*.zip
 
-# ---- Tool databases ----
+# Pipeline output
+data/
+deepvariant_results/
+output/
+VCF/
 snpEff/
-vep/
-reference/
 
-# ---- Logs & reports ----
-*.log
-*.html
-
-# ---- OS / IDE ----
+# OS files
 .DS_Store
 Thumbs.db
-.vscode/
-__pycache__/

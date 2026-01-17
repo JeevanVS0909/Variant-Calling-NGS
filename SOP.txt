@@ -1,0 +1,21 @@
+#docker build - 
+docker build -t dv .
+
+#docker run -
+docker run --rm -v "${PWD}/data:/data" -v "${PWD}/output:/output" -v "${PWD}:/workdir" -w /workdir dv python3 pipeline.py
+
+#install deepvariant container - 
+docker pull google/deepvariant:"1.6.0"
+
+#run deepvariant -
+docker run --rm -v "${PWD}:/workdir" -w /workdir google/deepvariant:1.6.0 `
+  /opt/deepvariant/bin/run_deepvariant `
+  --model_type=WGS `
+  --ref=GCF_000001405.40_GRCh38.p14_genomic.fna `
+  --reads=sorted_reads.bam `
+  --output_vcf=deepvariant_results/output.vcf.gz `
+  --output_gvcf=deepvariant_results/output.g.vcf.gz `
+  --num_shards=8
+
+#Check java version - 
+docker run --rm -it deepvariant java -version
