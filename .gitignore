@@ -1,0 +1,40 @@
+# ---- NGS raw & processed data ----
+*.fastq
+*.fastq.gz
+*.fq
+*.bam
+*.sam
+*.bai
+*.vcf
+*.vcf.gz
+*.bcf
+
+# ---- Variant annotation outputs ----
+*.csv
+*.tsv
+
+# ---- Reference genome & indexes ----
+*.fa
+*.fasta
+*.fna
+*.amb
+*.ann
+*.bwt
+*.pac
+*.sa
+*.fai
+
+# ---- Tool databases ----
+snpEff/
+vep/
+reference/
+
+# ---- Logs & reports ----
+*.log
+*.html
+
+# ---- OS / IDE ----
+.DS_Store
+Thumbs.db
+.vscode/
+__pycache__/
