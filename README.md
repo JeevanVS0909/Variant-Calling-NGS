@@ -112,9 +112,13 @@ results/civic.merged.maf	Clinical-grade CIViC annotation
 
 results/log.txt	Pipeline execution log
 
-✔ CIViC Annotation Completed
+
 References
+
 Van der Auwera, G.A., & O’Connor, B.D. (2020). Genomics in the Cloud. O’Reilly.
+
 Cibulskis, K. et al., (2013). Sensitive detection of somatic point mutations in impure and heterogeneous cancer samples. Nat Biotechnol.
+
 McLaren, W. et al., (2016). The Ensembl Variant Effect Predictor. Genome Biol.
+
 Talevich, E. et al., (2016). CNVkit: Genome-Wide Copy Number Detection and Visualization from Targeted DNA Sequencing. PLoS Comput Biol.
