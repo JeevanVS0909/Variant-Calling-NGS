@@ -44,7 +44,7 @@ def log(message):
 
 # Mark start of a new run
 log("\n" + "="*70)
-log("🚀 NEW PIPELINE RUN STARTED")
+log(" NEW PIPELINE RUN STARTED")
 log("="*70)
 
 
@@ -71,10 +71,10 @@ def run(cmd, step):
     process.wait()
 
     if process.returncode != 0:
-        log(f"❌ FAILED: {step}")
+        log(f" FAILED: {step}")
         raise RuntimeError(f"FAILED → {step}")
 
-    log(f"✅ COMPLETED: {step}")
+    log(f" COMPLETED: {step}")
     print(f" COMPLETED → {step}")
 
 
@@ -84,7 +84,7 @@ def exists(path):
 
 
 ############################################################
-# 1️⃣ REFERENCE PREPARATION
+# 1️. REFERENCE PREPARATION
 ############################################################
 
 def prepare_reference():
@@ -114,7 +114,7 @@ def prepare_reference():
 
 
 ############################################################
-# 2️⃣ FASTP QC
+# 2️. FASTP QC
 ############################################################
 
 def fastp(sample, r1, r2):
@@ -135,7 +135,7 @@ def fastp(sample, r1, r2):
 
 
 ############################################################
-# 3️⃣ ALIGNMENT
+# 3️. ALIGNMENT
 ############################################################
 
 def align(sample):
@@ -176,7 +176,7 @@ def align(sample):
 
 
 ############################################################
-# 4️⃣ GATK PREPROCESSING 
+# 4️. GATK PREPROCESSING 
 ############################################################
 
 def preprocess(sample):
@@ -303,7 +303,7 @@ def mutect2():
         f1r2_files.append(f1r2_chr)
 
         if exists(unfiltered_chr):
-            print(f"✔ Skipping {chrom}")
+            print(f" Skipping {chrom}")
             continue
 
         run(f"""
@@ -384,7 +384,7 @@ gatk SelectVariants \
 -O {pass_vcf}
 """, "Select PASS Variants")
 
-    print("✔ Mutect2 Somatic Calling Completed Successfully")
+    print(" Mutect2 Somatic Calling Completed Successfully")
 
 ############################################################
 # 6️. VEP ANNOTATION (CLINICAL-GRADE FINAL)
@@ -455,7 +455,7 @@ vep \
 --custom {RESOURCES}/Homo_sapiens_assembly38.dbsnp138.vcf.gz,dbSNP,vcf,exact,0,ID
 """, "VEP")
 
-    print("✔ VEP Annotation Completed")
+    print(" VEP Annotation Completed")
 
 ############################################################
 # 7️. VCF → MAF
@@ -490,8 +490,6 @@ def cnv():
 
     TARGET_BED = "resources/Twist_Exome_Target_hg38.bed"
     ANNOTATION = "resources/refFlat.txt"
-
-    # 🔥 ADD THIS (CRITICAL)
     ANTITARGET_BED = f"{OUTPUT}/cnvkit/antitarget.bed"
 
     tumor_bam = f"{OUTPUT}/TUMOR_final.bam"
@@ -504,7 +502,7 @@ def cnv():
     tumor_cns = f"{cnvkit_dir}/TUMOR_final.cns"
 
     # ------------------------------------------------------
-    # 0️⃣ CREATE ANTITARGET (WES FIX)
+    # 0️ CREATE ANTITARGET (WES FIX)
     # ------------------------------------------------------
     if not exists(ANTITARGET_BED):
         run(f"""
@@ -513,7 +511,7 @@ def cnv():
         """, "CNVkit Antitarget Creation")
 
     # ------------------------------------------------------
-    # 1️⃣ CREATE REFERENCE
+    # 1️ CREATE REFERENCE
     # ------------------------------------------------------
     if not exists(reference):
         run(f"""
@@ -532,7 +530,7 @@ def cnv():
         print("✔ Skipping CNVkit reference")
 
     # ------------------------------------------------------
-    # 2️⃣ RUN TUMOR CNV
+    # 2️ RUN TUMOR CNV
     # ------------------------------------------------------
     if not exists(tumor_cns):
         run(f"""
@@ -543,9 +541,9 @@ def cnv():
         """, "CNVkit Tumor")
 
     else:
-        print("✔ Skipping CNVkit tumor")
+        print(" Skipping CNVkit tumor")
 
-    print("✔ CNVkit Analysis Completed")
+    print(" CNVkit Analysis Completed")
 
 ############################################################
 # 8B. CNV → GENE LEVEL (CLINICAL + PRIORITIZED VERSION)
@@ -573,7 +571,7 @@ def cnv_to_genes():
         return
 
     # ------------------------------------------------------
-    # 1️⃣ RUN GENEMETRICS
+    # 1️ RUN GENEMETRICS
     # ------------------------------------------------------
     if not exists(gene_file):
         print(" Running CNVkit genemetrics...")
@@ -584,7 +582,7 @@ def cnv_to_genes():
         """, "CNVkit Gene Metrics")
 
     # ------------------------------------------------------
-    # 2️⃣ LOAD DATA
+    # 2️ LOAD DATA
     # ------------------------------------------------------
     try:
         df = pd.read_csv(gene_file, sep="\t")
@@ -601,7 +599,7 @@ def cnv_to_genes():
             raise RuntimeError(f" Missing column: {col}")
 
     # ------------------------------------------------------
-    # 3️⃣ CLEAN DATA
+    # 3️ CLEAN DATA
     # ------------------------------------------------------
     df = df.replace([np.inf, -np.inf], np.nan)
     df = df.dropna(subset=["log2"])
@@ -614,7 +612,7 @@ def cnv_to_genes():
         df = df[df["depth"] >= 20]
 
     # ------------------------------------------------------
-    # 🔥 REMOVE NOISY GENES (KEY FIX)
+    #  REMOVE NOISY GENES (KEY FIX)
     # ------------------------------------------------------
     noise_patterns = [
         "RGPD","POTEB","USP","ANKRD","OR","KRTAP",
@@ -623,7 +621,7 @@ def cnv_to_genes():
     df = df[~df["gene"].str.upper().str.contains("|".join(noise_patterns), na=False)]
 
     # ------------------------------------------------------
-    # 4️⃣ CNV CLASSIFICATION
+    # 4️ CNV CLASSIFICATION
     # ------------------------------------------------------
     df["CNV_TYPE"] = df["log2"].apply(
         lambda x: "AMPLIFICATION" if x >= 1.0 else (
@@ -634,12 +632,12 @@ def cnv_to_genes():
     df["COPY_NUMBER"] = (2 * (2 ** df["log2"])).round(2)
 
     # ------------------------------------------------------
-    # 5️⃣ REMOVE NEUTRAL
+    # 5️ REMOVE NEUTRAL
     # ------------------------------------------------------
     df = df[df["CNV_TYPE"] != "NEUTRAL"]
 
     # ------------------------------------------------------
-    # 🔥 BIOMARKER PRIORITY (NO FILTERING)
+    #  BIOMARKER PRIORITY (NO FILTERING)
     # ------------------------------------------------------
     important_genes = [
         "EGFR","KRAS","BRAF","ALK","ROS1","MET","RET","ERBB2",
@@ -651,7 +649,7 @@ def cnv_to_genes():
     df["IMPORTANT_GENE"] = df["gene"].str.upper().isin(important_genes)
 
     # ------------------------------------------------------
-    # 6️⃣ PRIORITY SCORING
+    # 6️ PRIORITY SCORING
     # ------------------------------------------------------
     df["ABS_LOG2"] = df["log2"].abs()
 
@@ -661,17 +659,17 @@ def cnv_to_genes():
     )
 
     # ------------------------------------------------------
-    # 7️⃣ SORT BY CLINICAL RELEVANCE
+    # 7️ SORT BY CLINICAL RELEVANCE
     # ------------------------------------------------------
     df = df.sort_values(by="PRIORITY_SCORE", ascending=False)
 
     # ------------------------------------------------------
-    # 8️⃣ TOP RESULTS LIMIT (OPTIONAL BUT USEFUL)
+    # 8️ TOP RESULTS LIMIT (OPTIONAL BUT USEFUL)
     # ------------------------------------------------------
     df = df.head(50)
 
     # ------------------------------------------------------
-    # 9️⃣ HANDLE EMPTY
+    # 9️ HANDLE EMPTY
     # ------------------------------------------------------
     if df.empty:
         print("⚠ No CNVs detected after filtering")
@@ -684,13 +682,13 @@ def cnv_to_genes():
         return
 
     # ------------------------------------------------------
-    # 🔟 PRINT IMPORTANT CNVs
+    # 10. PRINT IMPORTANT CNVs
     # ------------------------------------------------------
     important_df = df[df["IMPORTANT_GENE"]]
 
-    print("\n⭐ IMPORTANT CNVs:")
+    print("\n IMPORTANT CNVs:")
     if important_df.empty:
-        print("⚠ No known driver CNVs found")
+        print(" No known driver CNVs found")
     else:
         print(important_df[["gene","CNV_TYPE","COPY_NUMBER"]].head(10))
 
@@ -701,9 +699,9 @@ def cnv_to_genes():
 
     df.to_csv(final_output, index=False)
 
-    print(f"✔ CNV Gene-level events: {len(df)}")
-    print(f"⭐ Important genes found: {df['IMPORTANT_GENE'].sum()}")
-    print("✔ CNV Gene-level Annotation Completed")
+    print(f" CNV Gene-level events: {len(df)}")
+    print(f" Important genes found: {df['IMPORTANT_GENE'].sum()}")
+    print(" CNV Gene-level Annotation Completed")
 
 ############################################################
 # 9. CIViC (FINAL CLINICAL-GRADE VERSION)
@@ -730,17 +728,17 @@ def civic():
         return
 
     if not os.path.exists(input_maf):
-        print("⚠ MAF file not found")
+        print(" MAF file not found")
         return
 
-    print("🌐 Running CIViC Annotation (FINAL CLINICAL-GRADE)")
+    print(" Running CIViC Annotation (FINAL CLINICAL-GRADE)")
 
     maf = pd.read_csv(input_maf, sep="\t", comment="#", low_memory=False)
 
     # -------------------- DETECT GENE ------------------------
     gene_col = next((c for c in ["Hugo_Symbol","Gene","SYMBOL"] if c in maf.columns), None)
     if gene_col is None:
-        print("❌ Gene column missing")
+        print(" Gene column missing")
         return
 
     maf["GENE"] = maf[gene_col].astype(str).str.upper()
@@ -789,7 +787,7 @@ def civic():
 
     maf["PROTEIN"] = maf.apply(extract_protein, axis=1)
 
-    print("\n🔍 Sample variants:")
+    print("\n Sample variants:")
     print(maf[["GENE","PROTEIN"]].head(10))
 
     # -------------------- DRIVER GENE FILTER -----------------
@@ -801,11 +799,11 @@ def civic():
     maf_filtered = maf[maf["GENE"].isin(important_genes)].copy()
 
     if len(maf_filtered) == 0:
-        print("⚠ No driver genes → skipping CIViC")
+        print(" No driver genes → skipping CIViC")
         pd.DataFrame(columns=["GENE","PROTEIN","VARIANT","SOURCE"]).to_csv(output_file, sep="\t", index=False)
         return
 
-    print(f"✔ Driver gene variants: {len(maf_filtered)}")
+    print(f" Driver gene variants: {len(maf_filtered)}")
 
     # -------------------- LOAD CIViC TSV ---------------------
     if os.path.exists(civic_tsv):
@@ -897,8 +895,8 @@ def civic():
     # -------------------- SAVE -------------------------------
     df.to_csv(output_file, sep="\t", index=False)
 
-    print(f"✔ CIViC matches: {len(df)}")
-    print("✔ CIViC Annotation Completed (FINAL CLINICAL-GRADE)")
+    print(f" CIViC matches: {len(df)}")
+    print(" CIViC Annotation Completed (FINAL CLINICAL-GRADE)")
     
 ############################################################
 # 10. AMP / ASCO / CAP Clinical Classification
@@ -909,9 +907,9 @@ def amp_asco_classification():
     input_file = f"{OUTPUT}/civic.maf"
     output_file = f"{OUTPUT}/clinical_scored_variants.csv"
 
-    # 🔥 FIX: check empty file
+    #  FIX: check empty file
     if not exists(input_file) or os.path.getsize(input_file) == 0:
-        print("⚠ CIViC file empty → skipping AMP classification")
+        print(" CIViC file empty → skipping AMP classification")
         return
 
     try:
@@ -921,7 +919,7 @@ def amp_asco_classification():
         return
 
     if df.empty:
-        print("⚠ No data for AMP classification")
+        print("No data for AMP classification")
         return
 
     # -------------------------------
@@ -984,7 +982,7 @@ def actionable_drugs():
     resistance_output = f"{OUTPUT}/resistance_variants.csv"
 
     if not exists(input_maf):
-        print("⚠ CIViC MAF not found")
+        print("CIViC MAF not found")
         return
 
     df = pd.read_csv(input_maf, sep="\t")
@@ -1017,9 +1015,9 @@ def actionable_drugs():
     extended[clinical_cols].drop_duplicates().to_csv(extended_output, index=False)
     resistance[clinical_cols].drop_duplicates().to_csv(resistance_output, index=False)
 
-    print(f"✔ Strict actionable variants: {len(strict)}")
-    print(f"✔ Extended actionable variants: {len(extended)}")
-    print(f"✔ Resistance variants: {len(resistance)}")
+    print(f" Strict actionable variants: {len(strict)}")
+    print(f" Extended actionable variants: {len(extended)}")
+    print(f" Resistance variants: {len(resistance)}")
 
 ############################################################
 # 12. TUMOR MUTATIONAL BURDEN (TMB)
@@ -1031,7 +1029,7 @@ def tmb():
     capture_size_mb = 30  # <-- change if your WES kit differs
 
     if not exists(vcf_file):
-        print("⚠ Filtered VCF not found")
+        print(" Filtered VCF not found")
         return
 
     import gzip
