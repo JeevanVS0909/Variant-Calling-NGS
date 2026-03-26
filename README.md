@@ -95,26 +95,23 @@ The pipeline automatically performs all steps from QC → alignment → preproce
 Logs are stored in results/log.txt.
 
 Outputs
+
 File	Description
+
 results/*.bam	Aligned and preprocessed BAM files
+
 results/somatic_PASS.vcf.gz	High-confidence somatic variants
+
 results/annotated.vcf	VEP annotated variants
+
 results/somatic.maf	MAF format for analysis
+
 results/cnv_gene_level.csv	Gene-level CNVs
+
 results/civic.merged.maf	Clinical-grade CIViC annotation
+
 results/log.txt	Pipeline execution log
-Example
-python pipeline.py
 
-Output example:
-
-✔ Skipping FASTP for TUMOR
-✔ Skipping alignment for TUMOR
-✔ MarkDuplicates completed
-✔ BaseRecalibrator completed
-✔ Mutect2 Somatic Calling Completed Successfully
-✔ VEP Annotation Completed
-✔ CNV Gene-level Annotation Completed
 ✔ CIViC Annotation Completed
 References
 Van der Auwera, G.A., & O’Connor, B.D. (2020). Genomics in the Cloud. O’Reilly.
