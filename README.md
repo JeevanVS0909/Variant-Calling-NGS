@@ -1,162 +1,118 @@
-🧬 Whole Genome Variant Analysis Pipeline
+Variant-Calling-NGS 🧬
 
-DeepVariant • SnpEff • Biomarker Extraction
+Clinical Somatic Whole Exome Sequencing (WES) Pipeline
+Automated end-to-end pipeline for tumor-normal paired WES analysis, including QC, alignment, preprocessing, somatic variant calling, CNV detection, and clinical annotation.
 
-This repository provides a fully automated Whole Genome Sequencing (WGS) variant analysis pipeline that processes paired-end FASTQ files and produces clinically relevant biomarker variants in structured CSV format.
+Pipeline Overview
 
-The workflow integrates quality control, alignment, variant calling, annotation, and biomarker filtering using widely accepted genomics tools and a Python-based orchestration layer.
+This Python-based pipeline is designed to analyze paired tumor-normal WES samples and produce clinically-relevant variant calls.
 
-**🔬 Workflow Overview**
+Key steps include:
 
-Paired FASTQ
-   ↓
-FastQC (Quality Control)
-   ↓
-BWA-MEM (Alignment)
-   ↓
-SAM → BAM → Sorted BAM
-   ↓
-DeepVariant (WGS Model)
-   ↓
-VCF / gVCF
-   ↓
-Chromosome Renaming
-   ↓
-SnpEff Annotation
-   ↓
-VCF → CSV Conversion
-   ↓
-Biomarker Variant Extraction
-
-**📁 Repository Structure**
-.
-├── data/
-│   ├── SRR8261574_1.fastq
-│   └── SRR8261574_2.fastq
+Reference Preparation
+Checks and indexes the human reference genome (GRCh38)
+Creates sequence dictionary and FASTA index for GATK & BWA
+Tools: bwa, samtools, gatk
+FASTQ Quality Control
+Performs adapter trimming, quality filtering, and generates HTML QC report
+Tool: fastp
+Alignment
+Aligns reads to reference genome using BWA-MEM
+Sorts, indexes, and validates BAM files
+Tools: bwa, samtools
+GATK Preprocessing
+MarkDuplicates, Base Quality Score Recalibration (BQSR)
+Ensures known-sites indexing for dbSNP and Mills indels
+Tool: gatk
+Somatic Variant Calling
+Runs GATK Mutect2 per chromosome
+Generates filtered PASS variants
+Tools: gatk
+Variant Annotation
+Annotates somatic variants using VEP with ClinVar, dbSNP, and other clinical annotations
+Produces final annotated VCF
+Tool: vep
+VCF → MAF Conversion
+Converts annotated VCF to MAF format for downstream analysis
+Tool: vcf2maf
+Copy Number Variation (CNV) Analysis
+Runs CNVkit on tumor-normal pair
+Produces gene-level CNVs with clinical prioritization
+Tool: cnvkit
+Clinical Annotation (CIViC)
+Maps somatic variants to known cancer biomarkers
+Provides clinical-grade variant prioritization
+Directory Structure
+Variant-Calling-NGS/
 │
-├── reference/
-│   └── GCF_000001405.40_GRCh38.p14_genomic.fna
-│
-├── deepvariant_results/
-│   ├── fastqc/
-│   ├── output.vcf.gz
-│   ├── output.g.vcf.gz
-│   ├── output_renamed.vcf
-│   └── output_renamed_snpeff.vcf
-│
-├── VCF/
-│   ├── Biomarkers.csv
-│   ├── parsed_ann_output.csv
-│   └── filtered_biomarkers.csv
-│
-├── snpEff/
-│   └── data/GRCh38.105/
-│
-├── pipeline.py
-└── README.md
+├─ data/                    # Raw FASTQ files (tumor/normal)
+├─ resources/               # Reference genome, known sites, CNV targets, VEP cache
+├─ results/                 # Output directory for pipeline results
+│   ├─ cnvkit/              # CNV analysis outputs
+│   ├─ annotated.vcf        # VEP-annotated VCF
+│   ├─ somatic.maf          # Final MAF file
+│   └─ civic.merged.maf     # CIViC annotated variants
+├─ pipeline.py              # Main Python WES pipeline
+└─ README.md
+Requirements
 
-**⚙️ Software Requirements**
+System Requirements:
 
-🔹 Operating System
+Linux / macOS (tested on Ubuntu 22.04)
+≥16 CPU threads recommended
+≥64GB RAM for Mutect2 + VEP
 
-Linux (Ubuntu 20.04+ recommended)
+Software Dependencies:
 
-macOS (native DeepVariant supported)
+Python 3.10+
+BWA
+Samtools
+GATK
+Fastp
+VEP
+CNVkit
+vcf2maf
+R (optional for downstream analysis)
+Usage
+1. Clone the repository
+git clone https://github.com/JeevanVS0909/Variant-Calling-NGS.git
+cd Variant-Calling-NGS
+2. Prepare resources
 
-**🔹 Core Tools**
+Place reference genome, known-sites, VEP cache, and CNV target files in resources/.
 
-| Tool        | Purpose                | Minimum Version |
-| ----------- | ---------------------- | --------------- |
-| Python      | Pipeline orchestration | 3.8             |
-| FastQC      | Read quality control   | 0.11            |
-| BWA         | Read alignment         | 0.7.17          |
-| Samtools    | BAM processing         | 1.15            |
-| DeepVariant | Variant calling        | 1.5             |
-| Java        | SnpEff runtime         | 11              |
-| SnpEff      | Variant annotation     | 5.1             |
+3. Add raw data
 
+Place paired tumor-normal FASTQ files in data/ directory.
 
-**🧬 Reference Genome**
+4. Run the pipeline
+python pipeline.py
+The pipeline automatically performs all steps from QC → alignment → preprocessing → somatic calling → CNV → annotation.
+Logs are stored in results/log.txt.
+Outputs
+File	Description
+results/*.bam	Aligned and preprocessed BAM files
+results/somatic_PASS.vcf.gz	High-confidence somatic variants
+results/annotated.vcf	VEP annotated variants
+results/somatic.maf	MAF format for analysis
+results/cnv_gene_level.csv	Gene-level CNVs
+results/civic.merged.maf	Clinical-grade CIViC annotation
+results/log.txt	Pipeline execution log
+Example
+python pipeline.py
 
-GRCh38.p14
+Output example:
 
-File:
-
-GCF_000001405.40_GRCh38.p14_genomic.fna
-
-
-The pipeline automatically:
-
-1. Builds BWA indices
-
-2. Creates FASTA .fai index
-
-3. Ensures reference compatibility
-
-**🧪 SnpEff Database Setup**
-
-Before running the pipeline, download the annotation database:
-
-java -jar snpEff/snpEff.jar download GRCh38.105
-
-**🐳 Running the Pipeline (Docker)**
-
-If you already have the Docker image built:
-
-docker run --rm \
-  -v $(pwd):/workdir \
-  <your-docker-image-name>
-
-
-Docker execution ensures:
-
-1. Reproducibility
-
-2. No dependency conflicts
-
-3. Cross-platform compatibility
-
-**📊 Output Files**
-| File                        | Description                   |
-| --------------------------- | ----------------------------- |
-| `fastqc/*.html`             | Quality control reports       |
-| `output.vcf.gz`             | Raw DeepVariant variant calls |
-| `output.g.vcf.gz`           | gVCF output                   |
-| `output_renamed_snpeff.vcf` | Fully annotated variants      |
-| `Biomarkers.csv`            | Full variant dataset          |
-| `parsed_ann_output.csv`     | Parsed ANN fields             |
-| `filtered_biomarkers.csv`   | Selected biomarker variants   |
-
-**🧠 Key Features**
-
-✔ End-to-end WGS processing
-
-✔ DeepVariant best-practice variant calling
-
-✔ Chromosome normalization (NC → chr)
-
-✔ Streaming VCF parsing (memory efficient)
-
-✔ Automated biomarker extraction
-
-✔ Docker-compatible execution
-
-✔ Research & clinical ready
-
-**🧠 Use Cases**
-
--> Cancer genomics
--> Precision medicine
--> Clinical biomarker discovery
--> Population genomics
--> Research & diagnostics
-
-**🧩 Extensibility**
-
-This pipeline can be easily extended to include:
-
--> VEP annotation
--> ClinVar / COSMIC integration
--> Tumor–normal analysis
--> GPU-accelerated DeepVariant
--> Nextflow / Snakemake workflows
+✔ Skipping FASTP for TUMOR
+✔ Skipping alignment for TUMOR
+✔ MarkDuplicates completed
+✔ BaseRecalibrator completed
+✔ Mutect2 Somatic Calling Completed Successfully
+✔ VEP Annotation Completed
+✔ CNV Gene-level Annotation Completed
+✔ CIViC Annotation Completed
+References
+Van der Auwera, G.A., & O’Connor, B.D. (2020). Genomics in the Cloud. O’Reilly.
+Cibulskis, K. et al., (2013). Sensitive detection of somatic point mutations in impure and heterogeneous cancer samples. Nat Biotechnol.
+McLaren, W. et al., (2016). The Ensembl Variant Effect Predictor. Genome Biol.
+Talevich, E. et al., (2016). CNVkit: Genome-Wide Copy Number Detection and Visualization from Targeted DNA Sequencing. PLoS Comput Biol.
