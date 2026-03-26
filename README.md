@@ -42,6 +42,8 @@ Tool: cnvkit
 Clinical Annotation (CIViC)
 Maps somatic variants to known cancer biomarkers
 Provides clinical-grade variant prioritization
+
+
 Directory Structure
 Variant-Calling-NGS/
 │
@@ -55,6 +57,7 @@ Variant-Calling-NGS/
 ├─ pipeline.py              # Main Python WES pipeline
 └─ README.md
 Requirements
+
 
 System Requirements:
 
@@ -87,8 +90,10 @@ Place paired tumor-normal FASTQ files in data/ directory.
 
 4. Run the pipeline
 python pipeline.py
+
 The pipeline automatically performs all steps from QC → alignment → preprocessing → somatic calling → CNV → annotation.
 Logs are stored in results/log.txt.
+
 Outputs
 File	Description
 results/*.bam	Aligned and preprocessed BAM files
