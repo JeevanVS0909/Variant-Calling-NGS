@@ -26,10 +26,10 @@ KNOWN_SITES = [
     "resources/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz"
 ]
 
-TUMOR_R1  = "data/tumor_SRR6656083_1.fastq.gz"
-TUMOR_R2  = "data/tumor_SRR6656083_2.fastq.gz"
-NORMAL_R1 = "data/normal_SRR5801907_1.fastq.gz"
-NORMAL_R2 = "data/normal_SRR5801907_2.fastq.gz"
+TUMOR_R1  = "data/tumor.fastq.gz"
+TUMOR_R2  = "data/tumor.fastq.gz"
+NORMAL_R1 = "data/normal.fastq.gz"
+NORMAL_R2 = "data/normal.fastq.gz"
 
 ############################################################
 # LOGGING SYSTEM (PERSISTENT SINGLE LOG FILE)
